@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>App Aventure Perso</title>
+    <style>
+        :root {
+            --bg-interface: #1a1a1a;
+            --btn-blue: #0096d1;
+            --btn-green: #4caf50;
+            --btn-red: #d32f2f;
+            --text-gold: #ffcc00;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #333; /* Fond neutre */
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            user-select: none;
+        }
+
+        /* TIMER STYLE */
+        #timer-container {
+            margin-top: 30px;
+            background: #00bcd4;
+            padding: 10px 40px;
+            border-radius: 30px;
+            border: 4px solid #00838f;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        #timer {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: black;
+            font-family: monospace;
+        }
+
+        /* INTERFACE CIRCULAIRE */
+        .wheel-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            background: #222;
+            border-radius: 50%;
+            margin-top: 40px;
+            border: 10px solid #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .center-penalty {
+            position: absolute;
+            z-index: 2;
+            text-align: center;
+            background: var(--btn-red);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 3px solid white;
+            box-shadow: 0 0 15px rgba(211, 47, 47, 0.6);
+        }
+
+        /* POSITIONNEMENT DES BOUTONS AUTOUR */
+        .btn-app {
+            position: absolute;
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            border: 3px solid white;
+            background: var(--btn-blue);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .btn-app:active { transform: scale(0.9); }
+        .btn-app i { font-size: 1.2rem; margin-bottom: 2px; }
+
+        /* Coordonnées pour le cercle */
+        #btn-start   { top: 10px; background: var(--btn-green); }
+        #btn-hint    { left: 15px; top: 80px; }
+        #btn-hidden  { left: 15px; bottom: 80px; }
+        #btn-code    { right: 15px; top: 80px; }
+        #btn-machine { right: 15px; bottom: 80px; }
+        #btn-review  { bottom: 10px; }
+
+        .label {
+            position: absolute;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            width: 100px;
+            text-align: center;
+        }
+
+        /* MODAL CODES */
+        #code-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 10;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        input {
+            font-size: 2rem;
+            width: 200px;
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .modal-btns button {
+            padding: 15px 30px;
+            font-size: 1rem;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="timer-container">
+        <div id="timer">60:00</div>
+    </div>
+
+    <div class="wheel-container">
+        <div class="center-penalty">
+            <span style="font-size: 0.6rem;">PÉNALITÉ</span>
+            <span style="font-size: 1.5rem;">💀</span>
+        </div>
+
+        <div class="btn-app" id="btn-start" onclick="toggleTimer()">
+            <span>START</span>
+        </div>
+
+        <div class="btn-app" id="btn-hint" onclick="action('Indice')">
+            <span>💡</span>
+            <span style="font-size:0.5rem">INDICE</span>
+        </div>
+
+        <div class="btn-app" id="btn-code" onclick="openCode()">
+            <span>🔒</span>
+            <span style="font-size:0.5rem">CODE</span>
+        </div>
+
+        <div class="btn-app" id="btn-hidden" onclick="action('Objet Caché')">
+            <span>🔍</span>
+            <span style="font-size:0.4rem">OBJET</span>
+        </div>
+
+        <div class="btn-app" id="btn-machine" onclick="action('Machine')">
+            <span>⚙️</span>
+            <span style="font-size:0.4rem">MACHINE</span>
+        </div>
+
+        <div class="btn-app" id="btn-review" onclick="action('Revoir')">
+            <span>👁️</span>
+            <span style="font-size:0.4rem">REVOIR</span>
+        </div>
+    </div>
+
+    <div id="code-modal">
+        <h2 id="modal-title">ENTREZ LE CODE</h2>
+        <input type="number" id="code-input" pattern="\d*">
+        <div class="modal-btns">
+            <button onclick="checkCode()" style="background:var(--btn-green); color:white;">VALIDER</button>
+            <button onclick="closeCode()">RETOUR</button>
+        </div>
+    </div>
+
+    <script>
+        // CONFIG AUDIO
+        const sndClick = new Audio('click.mp3');
+        const sndError = new Audio('bip.mp3');
+        const sndSuccess = new Audio('bravo.mp3');
+        const sndAmbiance = new Audio('ambiance.mp3');
+        sndAmbiance.loop = true;
+
+        // DATA DU SCÉNARIO
+        const MES_CODES = {
+            "1234": "Porte déverrouillée ! Allez à la carte 15.",
+            "0000": "Félicitations, vous avez fini le scénario !"
+        };
+
+        let timeLeft = 60 * 60;
+        let timerActive = false;
+        let interval;
+
+        function toggleTimer() {
+            sndClick.play();
+            if (!timerActive) {
+                timerActive = true;
+                sndAmbiance.play();
+                document.getElementById('btn-start').innerText = "PAUSE";
+                interval = setInterval(updateTimer, 1000);
+            } else {
+                timerActive = false;
+                sndAmbiance.pause();
+                document.getElementById('btn-start').innerText = "START";
+                clearInterval(interval);
+            }
+        }
+
+        function updateTimer() {
+            if (timeLeft <= 0) {
+                clearInterval(interval);
+                alert("Temps écoulé !");
+                return;
+            }
+            timeLeft--;
+            const m = Math.floor(timeLeft / 60);
+            const s = timeLeft % 60;
+            document.getElementById('timer').innerText = 
+                `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        }
+
+        function openCode() { 
+            sndClick.play();
+            document.getElementById('code-modal').style.display = 'flex'; 
+        }
+
+        function closeCode() { 
+            document.getElementById('code-modal').style.display = 'none'; 
+        }
+
+        function checkCode() {
+            const val = document.getElementById('code-input').value;
+            if (MES_CODES[val]) {
+                sndSuccess.play();
+                alert(MES_CODES[val]);
+                closeCode();
+            } else {
+                sndError.play();
+                timeLeft -= 120; // -2 minutes
+                alert("MAUVAIS CODE ! Pénalité de 2 minutes.");
+                updateTimer();
+            }
+            document.getElementById('code-input').value = "";
+        }
+
+        function action(type) {
+            sndClick.play();
+            alert("Action : " + type);
+        }
+    </script>
+</body>
+</html>
