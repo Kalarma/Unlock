@@ -2,47 +2,52 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Unlock Adventure</title>
     <style>
         :root {
-            --gold: #d4af37;
             --cyan: #00e5ff;
-            --dark: #121212;
             --red: #ff3d00;
         }
 
+        /* BLOCAGE TOTAL DU ZOOM ET DU SCROLL */
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            touch-action: none; /* Désactive le zoom tactile et le scroll */
+            user-select: none;
         }
 
         body {
             margin: 0;
-            background: radial-gradient(circle, #2c2c2c 0%, #000 100%);
+            padding: 0;
+            /* TA PHOTO DE FOND ICI */
+            background: url('fond.png') no-repeat center center fixed;
+            background-size: cover;
             font-family: 'Segoe UI', Roboto, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             height: 100vh;
+            width: 100vw;
             color: white;
             overflow: hidden;
-            position: fixed; /* Empêche le bounce scroll sur iOS */
-            width: 100%;
+            position: fixed;
         }
 
         /* TIMER STYLE */
         #timer-container {
-            margin-top: 5vh;
+            margin-top: 8vh;
             background: var(--cyan);
             padding: 10px 40px;
             border-radius: 50px;
             border: 4px solid #008ba3;
-            box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.6);
+            z-index: 20;
         }
 
         #timer {
-            font-size: 4rem;
+            font-size: 3.5rem;
             font-weight: 900;
             color: #000;
             font-family: 'Courier New', Courier, monospace;
@@ -51,33 +56,33 @@
         /* DISQUE CENTRAL */
         .main-wheel {
             position: relative;
-            width: 340px;
-            height: 340px;
-            margin-top: 40px;
+            width: 320px;
+            height: 320px;
+            margin-top: 30px;
             border-radius: 50%;
-            background: #1a1a1a;
-            border: 2px solid #333;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+            background: rgba(26, 26, 26, 0.85); /* Semi-transparent pour voir le fond */
+            border: 2px solid #444;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
 
         /* BOUTONS */
         .btn-circle {
             position: absolute;
-            width: 75px;
-            height: 75px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             background: #222;
-            border: 2px solid #444;
+            border: 2px solid #555;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: transform 0.05s, background 0.2s;
+            z-index: 15;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        .btn-circle:active { transform: scale(0.92); background: #333; }
-        .btn-circle svg { width: 35px; height: 35px; fill: white; }
+        .btn-circle:active { background: var(--cyan); transform: scale(0.9); }
+        .btn-circle svg { width: 30px; height: 30px; fill: white; pointer-events: none; }
 
         /* CENTRE PÉNALITÉ */
         .penalty-center {
@@ -93,25 +98,25 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 10;
+            z-index: 20;
         }
-        .penalty-center svg { width: 40px; height: 40px; fill: white; }
+        .penalty-center svg { width: 35px; height: 35px; fill: white; }
         .penalty-text { font-size: 0.6rem; font-weight: bold; margin-bottom: 2px; }
 
-        /* POSITIONS DES BOUTONS */
-        #btn-start { top: -10px; left: 50%; transform: translateX(-50%); border-color: #4caf50; }
-        #btn-hint { top: 70px; left: 15px; }
-        #btn-code { top: 70px; right: 15px; }
-        #btn-object { bottom: 70px; left: 15px; }
-        #btn-machine { bottom: 70px; right: 15px; }
-        #btn-review { bottom: -10px; left: 50%; transform: translateX(-50%); }
+        /* POSITIONS */
+        #btn-start { top: -15px; left: 50%; transform: translateX(-50%); border-color: #4caf50; }
+        #btn-hint { top: 60px; left: 10px; }
+        #btn-code { top: 60px; right: 10px; }
+        #btn-object { bottom: 60px; left: 10px; }
+        #btn-machine { bottom: 60px; right: 10px; }
+        #btn-review { bottom: -15px; left: 50%; transform: translateX(-50%); }
 
-        /* MODAL */
+        /* MODAL CODE */
         #code-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
+            background: rgba(0,0,0,0.97);
             z-index: 100;
             flex-direction: column;
             justify-content: center;
@@ -124,74 +129,77 @@
             border: none;
             border-bottom: 4px solid var(--cyan);
             font-size: 4rem;
-            width: 200px;
+            width: 220px;
             text-align: center;
             outline: none;
             margin-bottom: 40px;
+            touch-action: auto; /* Autorise l'écriture sur l'input */
         }
 
-        .shake { animation: shakeAnim 0.4s; }
+        .shake { animation: shakeAnim 0.3s ease-in-out; }
         @keyframes shakeAnim {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-15px); }
-            75% { transform: translateX(15px); }
+            0%, 100% { transform: translate(-50%, -50%); }
+            20%, 60% { transform: translate(-55%, -50%); }
+            40%, 80% { transform: translate(-45%, -50%); }
         }
     </style>
 </head>
-<body>
+<body onclick="unlockAudio()">
 
     <div id="timer-container">
         <div id="timer">60:00</div>
     </div>
 
     <div class="main-wheel">
-        <div class="penalty-center" onclick="triggerPenalty()">
+        <div class="penalty-center" id="penalty-hit" onclick="triggerPenalty()">
             <span class="penalty-text">PÉNALITÉ</span>
-            <svg viewBox="0 0 24 24"><path d="M12,2C11.5,2 11,2.19 10.59,2.59L2.59,10.59C1.81,11.37 1.81,12.63 2.59,13.41L10.59,21.41C11,21.81 11.5,22 12,22C12.5,22 13,21.81 13.41,21.41L21.41,13.41C22.19,12.63 22.19,11.37 21.41,10.59L13.41,2.59C13,2.19 12.5,2 12,2M12,7C12.55,7 13,7.45 13,8V12C13,12.55 12.55,13 12,13C11.45,13 11,12.55 11,12V8C11,7.45 11.45,7 12,7M12,15A1,1 0 0,1 13,16A1,1 0 0,1 12,17A1,1 0 0,1 11,16A1,1 0 0,1 12,15Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12,2L1,21H23L12,2M12,6L19.53,19H4.47L12,6M11,10V14H13V10H11M11,16V18H13V16H11Z"/></svg>
         </div>
 
         <div class="btn-circle" id="btn-start" onclick="toggleGame()">
             <svg id="start-icon" viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg>
         </div>
 
-        <div class="btn-circle" id="btn-hint" onclick="btnAction()">
-            <svg viewBox="0 0 24 24"><path d="M12,2A7,7 0 0,0 5,9C5,11.38 6.19,13.47 8,14.74V17A1,1 0 0,0 9,18H15A1,1 0 0,0 16,17V14.74C17.81,13.47 19,11.38 19,9A7,7 0 0,0 12,2M9,21A1,1 0 0,0 10,22H14A1,1 0 0,0 15,21V20H9V21Z"/></svg>
-        </div>
-
-        <div class="btn-circle" id="btn-code" onclick="showCode()">
-            <svg viewBox="0 0 24 24"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.11,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8H17V6A5,5 0 0,0 12,1A5,5 0 0,0 7,6V8H6A2,2 0 0,0 4,10V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V10A2,2 0 0,0 18,8M8.9,6C8.9,4.29 10.29,2.9 12,2.9C13.71,2.9 15.1,4.29 15.1,6V8H8.9V6Z"/></svg>
-        </div>
-
-        <div class="btn-circle" id="btn-object" onclick="btnAction()">
-            <svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/></svg>
-        </div>
-
-        <div class="btn-circle" id="btn-machine" onclick="btnAction()">
-            <svg viewBox="0 0 24 24"><path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.35 19.43,11.03L21.54,9.37C21.73,9.22 21.78,8.97 21.68,8.76L19.68,5.3C19.58,5.09 19.33,5.03 19.12,5.11L16.64,6.11C16.12,5.71 15.56,5.38 14.94,5.13L14.57,2.47C14.53,2.25 14.34,2.1 14.11,2.1H10.11C9.88,2.1 9.69,2.25 9.65,2.47L9.28,5.13C8.66,5.38 8.1,5.71 7.58,6.11L5.1,5.11C4.89,5.03 4.64,5.09 4.54,5.3L2.54,8.76C2.44,8.97 2.49,9.22 2.68,9.37L4.79,11.03C4.75,11.35 4.72,11.67 4.72,12C4.72,12.33 4.75,12.65 4.79,12.97L2.68,14.63C2.49,14.78 2.44,15.03 2.54,15.24L4.54,18.7C4.64,18.91 4.89,18.97 5.1,18.89L7.58,17.89C8.1,18.29 8.66,18.62 9.28,18.87L9.65,21.53C9.69,21.75 9.88,21.9 10.11,21.9H14.11C14.34,21.9 14.53,21.75 14.57,21.53L14.94,18.87C15.56,18.62 16.12,18.29 16.64,17.89L19.12,18.89C19.33,18.97 19.58,18.91 19.68,18.7L21.68,15.24C21.78,15.03 21.73,14.78 21.54,14.63L19.43,12.97Z"/></svg>
-        </div>
-
-        <div class="btn-circle" id="btn-review" onclick="btnAction()">
-            <svg viewBox="0 0 24 24"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
-        </div>
+        <div class="btn-circle" id="btn-hint" onclick="playClick()"><svg viewBox="0 0 24 24"><path d="M12,2A7,7 0 0,0 5,9C5,11.38 6.19,13.47 8,14.74V17A1,1 0 0,0 9,18H15A1,1 0 0,0 16,17V14.74C17.81,13.47 19,11.38 19,9A7,7 0 0,0 12,2M9,21A1,1 0 0,0 10,22H14A1,1 0 0,0 15,21V20H9V21Z"/></svg></div>
+        <div class="btn-circle" id="btn-code" onclick="showCode()"><svg viewBox="0 0 24 24"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.11,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8H17V6A5,5 0 0,0 12,1A5,5 0 0,0 7,6V8H6A2,2 0 0,0 4,10V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V10A2,2 0 0,0 18,8M8.9,6C8.9,4.29 10.29,2.9 12,2.9C13.71,2.9 15.1,4.29 15.1,6V8H8.9V6Z"/></svg></div>
+        <div class="btn-circle" id="btn-object" onclick="playClick()"><svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/></svg></div>
+        <div class="btn-circle" id="btn-machine" onclick="playClick()"><svg viewBox="0 0 24 24"><path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.35 19.43,11.03L21.54,9.37C21.73,9.22 21.78,8.97 21.68,8.76L19.68,5.3C19.58,5.09 19.33,5.03 19.12,5.11L16.64,6.11C16.12,5.71 15.56,5.38 14.94,5.13L14.57,2.47C14.53,2.25 14.34,2.1 14.11,2.1H10.11C9.88,2.1 9.69,2.25 9.65,2.47L9.28,5.13C8.66,5.38 8.1,5.71 7.58,6.11L5.1,5.11C4.89,5.03 4.64,5.09 4.54,5.3L2.54,8.76C2.44,8.97 2.49,9.22 2.68,9.37L4.79,11.03C4.75,11.35 4.72,11.67 4.72,12C4.72,12.33 4.75,12.65 4.79,12.97L2.68,14.63C2.49,14.78 2.44,15.03 2.54,15.24L4.54,18.7C4.64,18.91 4.89,18.97 5.1,18.89L7.58,17.89C8.1,18.29 8.66,18.62 9.28,18.87L9.65,21.53C9.69,21.75 9.88,21.9 10.11,21.9H14.11C14.34,21.9 14.53,21.75 14.57,21.53L14.94,18.87C15.56,18.62 16.12,18.29 16.64,17.89L19.12,18.89C19.33,18.97 19.58,18.91 19.68,18.7L21.68,15.24C21.78,15.03 21.73,14.78 21.54,14.63L19.43,12.97Z"/></svg></div>
+        <div class="btn-circle" id="btn-review" onclick="playClick()"><svg viewBox="0 0 24 24"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg></div>
     </div>
 
     <div id="code-overlay">
         <input type="number" id="code-input" pattern="\d*" placeholder="0000">
         <div style="display: flex; gap: 20px;">
-            <button onclick="checkCode()" style="background:var(--cyan); color:black; padding:15px 30px; font-weight:bold; border-radius:10px; border:none;">VALIDER</button>
-            <button onclick="hideCode()" style="background:#444; color:white; padding:15px 30px; border-radius:10px; border:none;">RETOUR</button>
+            <button onclick="checkCode()" style="background:var(--cyan); color:black; padding:15px 30px; font-weight:bold; border-radius:10px; border:none; touch-action:auto;">VALIDER</button>
+            <button onclick="hideCode()" style="background:#444; color:white; padding:15px 30px; border-radius:10px; border:none; touch-action:auto;">RETOUR</button>
         </div>
     </div>
 
     <script>
-        // SYSTEME AUDIO OPTIMISÉ (Permet de jouer plusieurs fois le même son très vite)
-        function playSnd(file) {
-            const s = new Audio(file);
-            s.play().catch(() => {}); // Évite l'erreur si l'utilisateur n'a pas encore cliqué
+        // AUDIO PRE-LOADING
+        const audioCtx = {
+            ambiance: new Audio('ambiance.mp3'),
+            bip: new Audio('bip.mp3'),
+            bravo: new Audio('bravo.mp3'),
+            click: new Audio('click.mp3'),
+            unlocked: false
+        };
+        audioCtx.ambiance.loop = true;
+
+        // Fonction pour déverrouiller l'audio sur mobile
+        function unlockAudio() {
+            if (audioCtx.unlocked) return;
+            audioCtx.click.play().then(() => {
+                audioCtx.click.pause();
+                audioCtx.unlocked = true;
+                console.log("Audio Unlocked");
+            });
         }
 
-        const ambiance = new Audio('ambiance.mp3');
-        ambiance.loop = true;
+        function playSound(sound) {
+            const s = audioCtx[sound].cloneNode();
+            s.play();
+        }
 
         let timeLeft = 60 * 60;
         let isRunning = false;
@@ -204,40 +212,40 @@
         }
 
         function toggleGame() {
-            playSnd('click.mp3');
+            playSound('click');
             if (!isRunning) {
                 isRunning = true;
-                ambiance.play();
+                audioCtx.ambiance.play();
                 document.getElementById('start-icon').innerHTML = '<path d="M14,19H18V5H14M6,19H10V5H6V19Z"/>';
                 timerInterval = setInterval(() => {
                     if (timeLeft > 0) { timeLeft--; updateDisplay(); }
                 }, 1000);
             } else {
                 isRunning = false;
-                ambiance.pause();
+                audioCtx.ambiance.pause();
                 document.getElementById('start-icon').innerHTML = '<path d="M8,5.14V19.14L19,12.14L8,5.14Z"/>';
                 clearInterval(timerInterval);
             }
         }
 
         function triggerPenalty() {
-            playSnd('bip.mp3');
-            timeLeft = Math.max(0, timeLeft - 180); // -3 min
+            playSound('bip');
+            timeLeft = Math.max(0, timeLeft - 180);
             updateDisplay();
-            document.body.classList.add('shake');
-            setTimeout(() => document.body.classList.remove('shake'), 400);
+            const btn = document.getElementById('penalty-hit');
+            btn.classList.add('shake');
+            setTimeout(() => btn.classList.remove('shake'), 300);
         }
 
-        function showCode() { playSnd('click.mp3'); document.getElementById('code-overlay').style.display = 'flex'; }
+        function showCode() { playSound('click'); document.getElementById('code-overlay').style.display = 'flex'; }
         function hideCode() { document.getElementById('code-overlay').style.display = 'none'; }
-        function btnAction() { playSnd('click.mp3'); }
+        function playClick() { playSound('click'); }
 
         function checkCode() {
             const val = document.getElementById('code-input').value;
-            // ICI TES CODES PERSO
-            if (val === "1234") {
-                playSnd('bravo.mp3');
-                alert("CODE CORRECT !");
+            if (val === "1234") { // TON CODE ICI
+                playSound('bravo');
+                alert("SUCCÈS !");
                 hideCode();
             } else {
                 triggerPenalty();
@@ -245,11 +253,6 @@
             }
             document.getElementById('code-input').value = "";
         }
-
-        // Empêcher le zoom sur double tap
-        document.addEventListener('touchstart', (e) => {
-            if (e.touches.length > 1) e.preventDefault();
-        }, { passive: false });
 
         updateDisplay();
     </script>
