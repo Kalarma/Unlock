@@ -3,140 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>App Aventure Perso</title>
+    <title>Unlock Adventure</title>
     <style>
         :root {
-            --bg-interface: #1a1a1a;
-            --btn-blue: #0096d1;
-            --btn-green: #4caf50;
-            --btn-red: #d32f2f;
-            --text-gold: #ffcc00;
+            --gold: #d4af37;
+            --cyan: #00e5ff;
+            --dark: #121212;
+            --red: #ff3d00;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             margin: 0;
-            padding: 0;
-            background-color: #333; /* Fond neutre */
-            font-family: 'Arial', sans-serif;
+            background: radial-gradient(circle, #2c2c2c 0%, #000 100%);
+            font-family: 'Segoe UI', Roboto, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             height: 100vh;
             color: white;
-            user-select: none;
+            overflow: hidden;
+            position: fixed; /* Empêche le bounce scroll sur iOS */
+            width: 100%;
         }
 
         /* TIMER STYLE */
         #timer-container {
-            margin-top: 30px;
-            background: #00bcd4;
+            margin-top: 5vh;
+            background: var(--cyan);
             padding: 10px 40px;
-            border-radius: 30px;
-            border: 4px solid #00838f;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            border-radius: 50px;
+            border: 4px solid #008ba3;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
         }
 
         #timer {
-            font-size: 3.5rem;
-            font-weight: bold;
-            color: black;
-            font-family: monospace;
+            font-size: 4rem;
+            font-weight: 900;
+            color: #000;
+            font-family: 'Courier New', Courier, monospace;
         }
 
-        /* INTERFACE CIRCULAIRE */
-        .wheel-container {
+        /* DISQUE CENTRAL */
+        .main-wheel {
             position: relative;
-            width: 320px;
-            height: 320px;
-            background: #222;
-            border-radius: 50%;
+            width: 340px;
+            height: 340px;
             margin-top: 40px;
-            border: 10px solid #111;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            border-radius: 50%;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8);
         }
 
-        .center-penalty {
+        /* BOUTONS */
+        .btn-circle {
             position: absolute;
-            z-index: 2;
-            text-align: center;
-            background: var(--btn-red);
-            width: 80px;
-            height: 80px;
+            width: 75px;
+            height: 75px;
             border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            border: 3px solid white;
-            box-shadow: 0 0 15px rgba(211, 47, 47, 0.6);
-        }
-
-        /* POSITIONNEMENT DES BOUTONS AUTOUR */
-        .btn-app {
-            position: absolute;
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
-            border: 3px solid white;
-            background: var(--btn-blue);
-            color: white;
+            background: #222;
+            border: 2px solid #444;
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-direction: column;
-            font-size: 0.7rem;
             cursor: pointer;
-            transition: transform 0.1s;
+            transition: transform 0.05s, background 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        .btn-app:active { transform: scale(0.9); }
-        .btn-app i { font-size: 1.2rem; margin-bottom: 2px; }
+        .btn-circle:active { transform: scale(0.92); background: #333; }
+        .btn-circle svg { width: 35px; height: 35px; fill: white; }
 
-        /* Coordonnées pour le cercle */
-        #btn-start   { top: 10px; background: var(--btn-green); }
-        #btn-hint    { left: 15px; top: 80px; }
-        #btn-hidden  { left: 15px; bottom: 80px; }
-        #btn-code    { right: 15px; top: 80px; }
-        #btn-machine { right: 15px; bottom: 80px; }
-        #btn-review  { bottom: 10px; }
-
-        .label {
+        /* CENTRE PÉNALITÉ */
+        .penalty-center {
             position: absolute;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            width: 100px;
-            text-align: center;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(145deg, #d32f2f, #8b0000);
+            border-radius: 50%;
+            border: 3px solid #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
         }
+        .penalty-center svg { width: 40px; height: 40px; fill: white; }
+        .penalty-text { font-size: 0.6rem; font-weight: bold; margin-bottom: 2px; }
 
-        /* MODAL CODES */
-        #code-modal {
+        /* POSITIONS DES BOUTONS */
+        #btn-start { top: -10px; left: 50%; transform: translateX(-50%); border-color: #4caf50; }
+        #btn-hint { top: 70px; left: 15px; }
+        #btn-code { top: 70px; right: 15px; }
+        #btn-object { bottom: 70px; left: 15px; }
+        #btn-machine { bottom: 70px; right: 15px; }
+        #btn-review { bottom: -10px; left: 50%; transform: translateX(-50%); }
+
+        /* MODAL */
+        #code-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 10;
+            background: rgba(0,0,0,0.95);
+            z-index: 100;
             flex-direction: column;
             justify-content: center;
             align-items: center;
         }
 
-        input {
-            font-size: 2rem;
+        #code-input {
+            background: none;
+            color: var(--cyan);
+            border: none;
+            border-bottom: 4px solid var(--cyan);
+            font-size: 4rem;
             width: 200px;
             text-align: center;
-            margin-bottom: 20px;
-            padding: 10px;
-            border-radius: 10px;
+            outline: none;
+            margin-bottom: 40px;
         }
 
-        .modal-btns button {
-            padding: 15px 30px;
-            font-size: 1rem;
-            margin: 5px;
-            cursor: pointer;
+        .shake { animation: shakeAnim 0.4s; }
+        @keyframes shakeAnim {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-15px); }
+            75% { transform: translateX(15px); }
         }
     </style>
 </head>
@@ -146,125 +144,114 @@
         <div id="timer">60:00</div>
     </div>
 
-    <div class="wheel-container">
-        <div class="center-penalty">
-            <span style="font-size: 0.6rem;">PÉNALITÉ</span>
-            <span style="font-size: 1.5rem;">💀</span>
+    <div class="main-wheel">
+        <div class="penalty-center" onclick="triggerPenalty()">
+            <span class="penalty-text">PÉNALITÉ</span>
+            <svg viewBox="0 0 24 24"><path d="M12,2C11.5,2 11,2.19 10.59,2.59L2.59,10.59C1.81,11.37 1.81,12.63 2.59,13.41L10.59,21.41C11,21.81 11.5,22 12,22C12.5,22 13,21.81 13.41,21.41L21.41,13.41C22.19,12.63 22.19,11.37 21.41,10.59L13.41,2.59C13,2.19 12.5,2 12,2M12,7C12.55,7 13,7.45 13,8V12C13,12.55 12.55,13 12,13C11.45,13 11,12.55 11,12V8C11,7.45 11.45,7 12,7M12,15A1,1 0 0,1 13,16A1,1 0 0,1 12,17A1,1 0 0,1 11,16A1,1 0 0,1 12,15Z"/></svg>
         </div>
 
-        <div class="btn-app" id="btn-start" onclick="toggleTimer()">
-            <span>START</span>
+        <div class="btn-circle" id="btn-start" onclick="toggleGame()">
+            <svg id="start-icon" viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg>
         </div>
 
-        <div class="btn-app" id="btn-hint" onclick="action('Indice')">
-            <span>💡</span>
-            <span style="font-size:0.5rem">INDICE</span>
+        <div class="btn-circle" id="btn-hint" onclick="btnAction()">
+            <svg viewBox="0 0 24 24"><path d="M12,2A7,7 0 0,0 5,9C5,11.38 6.19,13.47 8,14.74V17A1,1 0 0,0 9,18H15A1,1 0 0,0 16,17V14.74C17.81,13.47 19,11.38 19,9A7,7 0 0,0 12,2M9,21A1,1 0 0,0 10,22H14A1,1 0 0,0 15,21V20H9V21Z"/></svg>
         </div>
 
-        <div class="btn-app" id="btn-code" onclick="openCode()">
-            <span>🔒</span>
-            <span style="font-size:0.5rem">CODE</span>
+        <div class="btn-circle" id="btn-code" onclick="showCode()">
+            <svg viewBox="0 0 24 24"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.11,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8H17V6A5,5 0 0,0 12,1A5,5 0 0,0 7,6V8H6A2,2 0 0,0 4,10V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V10A2,2 0 0,0 18,8M8.9,6C8.9,4.29 10.29,2.9 12,2.9C13.71,2.9 15.1,4.29 15.1,6V8H8.9V6Z"/></svg>
         </div>
 
-        <div class="btn-app" id="btn-hidden" onclick="action('Objet Caché')">
-            <span>🔍</span>
-            <span style="font-size:0.4rem">OBJET</span>
+        <div class="btn-circle" id="btn-object" onclick="btnAction()">
+            <svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/></svg>
         </div>
 
-        <div class="btn-app" id="btn-machine" onclick="action('Machine')">
-            <span>⚙️</span>
-            <span style="font-size:0.4rem">MACHINE</span>
+        <div class="btn-circle" id="btn-machine" onclick="btnAction()">
+            <svg viewBox="0 0 24 24"><path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.35 19.43,11.03L21.54,9.37C21.73,9.22 21.78,8.97 21.68,8.76L19.68,5.3C19.58,5.09 19.33,5.03 19.12,5.11L16.64,6.11C16.12,5.71 15.56,5.38 14.94,5.13L14.57,2.47C14.53,2.25 14.34,2.1 14.11,2.1H10.11C9.88,2.1 9.69,2.25 9.65,2.47L9.28,5.13C8.66,5.38 8.1,5.71 7.58,6.11L5.1,5.11C4.89,5.03 4.64,5.09 4.54,5.3L2.54,8.76C2.44,8.97 2.49,9.22 2.68,9.37L4.79,11.03C4.75,11.35 4.72,11.67 4.72,12C4.72,12.33 4.75,12.65 4.79,12.97L2.68,14.63C2.49,14.78 2.44,15.03 2.54,15.24L4.54,18.7C4.64,18.91 4.89,18.97 5.1,18.89L7.58,17.89C8.1,18.29 8.66,18.62 9.28,18.87L9.65,21.53C9.69,21.75 9.88,21.9 10.11,21.9H14.11C14.34,21.9 14.53,21.75 14.57,21.53L14.94,18.87C15.56,18.62 16.12,18.29 16.64,17.89L19.12,18.89C19.33,18.97 19.58,18.91 19.68,18.7L21.68,15.24C21.78,15.03 21.73,14.78 21.54,14.63L19.43,12.97Z"/></svg>
         </div>
 
-        <div class="btn-app" id="btn-review" onclick="action('Revoir')">
-            <span>👁️</span>
-            <span style="font-size:0.4rem">REVOIR</span>
+        <div class="btn-circle" id="btn-review" onclick="btnAction()">
+            <svg viewBox="0 0 24 24"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>
         </div>
     </div>
 
-    <div id="code-modal">
-        <h2 id="modal-title">ENTREZ LE CODE</h2>
-        <input type="number" id="code-input" pattern="\d*">
-        <div class="modal-btns">
-            <button onclick="checkCode()" style="background:var(--btn-green); color:white;">VALIDER</button>
-            <button onclick="closeCode()">RETOUR</button>
+    <div id="code-overlay">
+        <input type="number" id="code-input" pattern="\d*" placeholder="0000">
+        <div style="display: flex; gap: 20px;">
+            <button onclick="checkCode()" style="background:var(--cyan); color:black; padding:15px 30px; font-weight:bold; border-radius:10px; border:none;">VALIDER</button>
+            <button onclick="hideCode()" style="background:#444; color:white; padding:15px 30px; border-radius:10px; border:none;">RETOUR</button>
         </div>
     </div>
 
     <script>
-        // CONFIG AUDIO
-        const sndClick = new Audio('click.mp3');
-        const sndError = new Audio('bip.mp3');
-        const sndSuccess = new Audio('bravo.mp3');
-        const sndAmbiance = new Audio('ambiance.mp3');
-        sndAmbiance.loop = true;
+        // SYSTEME AUDIO OPTIMISÉ (Permet de jouer plusieurs fois le même son très vite)
+        function playSnd(file) {
+            const s = new Audio(file);
+            s.play().catch(() => {}); // Évite l'erreur si l'utilisateur n'a pas encore cliqué
+        }
 
-        // DATA DU SCÉNARIO
-        const MES_CODES = {
-            "1234": "Porte déverrouillée ! Allez à la carte 15.",
-            "0000": "Félicitations, vous avez fini le scénario !"
-        };
+        const ambiance = new Audio('ambiance.mp3');
+        ambiance.loop = true;
 
         let timeLeft = 60 * 60;
-        let timerActive = false;
-        let interval;
+        let isRunning = false;
+        let timerInterval;
 
-        function toggleTimer() {
-            sndClick.play();
-            if (!timerActive) {
-                timerActive = true;
-                sndAmbiance.play();
-                document.getElementById('btn-start').innerText = "PAUSE";
-                interval = setInterval(updateTimer, 1000);
-            } else {
-                timerActive = false;
-                sndAmbiance.pause();
-                document.getElementById('btn-start').innerText = "START";
-                clearInterval(interval);
-            }
-        }
-
-        function updateTimer() {
-            if (timeLeft <= 0) {
-                clearInterval(interval);
-                alert("Temps écoulé !");
-                return;
-            }
-            timeLeft--;
+        function updateDisplay() {
             const m = Math.floor(timeLeft / 60);
             const s = timeLeft % 60;
-            document.getElementById('timer').innerText = 
-                `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            document.getElementById('timer').innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
         }
 
-        function openCode() { 
-            sndClick.play();
-            document.getElementById('code-modal').style.display = 'flex'; 
+        function toggleGame() {
+            playSnd('click.mp3');
+            if (!isRunning) {
+                isRunning = true;
+                ambiance.play();
+                document.getElementById('start-icon').innerHTML = '<path d="M14,19H18V5H14M6,19H10V5H6V19Z"/>';
+                timerInterval = setInterval(() => {
+                    if (timeLeft > 0) { timeLeft--; updateDisplay(); }
+                }, 1000);
+            } else {
+                isRunning = false;
+                ambiance.pause();
+                document.getElementById('start-icon').innerHTML = '<path d="M8,5.14V19.14L19,12.14L8,5.14Z"/>';
+                clearInterval(timerInterval);
+            }
         }
 
-        function closeCode() { 
-            document.getElementById('code-modal').style.display = 'none'; 
+        function triggerPenalty() {
+            playSnd('bip.mp3');
+            timeLeft = Math.max(0, timeLeft - 180); // -3 min
+            updateDisplay();
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 400);
         }
+
+        function showCode() { playSnd('click.mp3'); document.getElementById('code-overlay').style.display = 'flex'; }
+        function hideCode() { document.getElementById('code-overlay').style.display = 'none'; }
+        function btnAction() { playSnd('click.mp3'); }
 
         function checkCode() {
             const val = document.getElementById('code-input').value;
-            if (MES_CODES[val]) {
-                sndSuccess.play();
-                alert(MES_CODES[val]);
-                closeCode();
+            // ICI TES CODES PERSO
+            if (val === "1234") {
+                playSnd('bravo.mp3');
+                alert("CODE CORRECT !");
+                hideCode();
             } else {
-                sndError.play();
-                timeLeft -= 120; // -2 minutes
-                alert("MAUVAIS CODE ! Pénalité de 2 minutes.");
-                updateTimer();
+                triggerPenalty();
+                hideCode();
             }
             document.getElementById('code-input').value = "";
         }
 
-        function action(type) {
-            sndClick.play();
-            alert("Action : " + type);
-        }
+        // Empêcher le zoom sur double tap
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) e.preventDefault();
+        }, { passive: false });
+
+        updateDisplay();
     </script>
 </body>
 </html>
