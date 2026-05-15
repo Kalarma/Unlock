@@ -1,260 +1,605 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Unlock Adventure</title>
-    <style>
-        :root {
-            --cyan: #00e5ff;
-            --red: #ff3d00;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Hantise — Jeu de Médiums</title>
+  <style>
+    /* ── Reset & variables ─────────────────────────────────────────────── */
+    :root {
+      --bg-dark:   #0d0d1a;
+      --bg-card:   #1a1a2e;
+      --bg-panel:  #16213e;
+      --purple:    #7c3aed;
+      --purple-lt: #a78bfa;
+      --gold:      #d4a843;
+      --gold-lt:   #fcd34d;
+      --red:       #dc2626;
+      --green:     #059669;
+      --text:      #e2e8f0;
+      --text-dim:  #94a3b8;
+      --border:    rgba(212,168,67,.25);
+      --glow:      0 0 20px rgba(124,58,237,.4);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%; width: 100%;
+      background: var(--bg-dark);
+      color: var(--text);
+      font-family: 'Georgia', serif;
+      overflow: hidden;
+      position: fixed;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
 
-        /* BLOCAGE TOTAL DU ZOOM ET DU SCROLL */
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: none; /* Désactive le zoom tactile et le scroll */
-            user-select: none;
-        }
+    /* ── Utilitaires ───────────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+    .screen {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      overflow-y: auto; overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right)
+               env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
 
-        body {
-            margin: 0;
-            padding: 0;
-            /* TA PHOTO DE FOND ICI */
-            background: url('fond.png') no-repeat center center fixed;
-            background-size: cover;
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            width: 100vw;
-            color: white;
-            overflow: hidden;
-            position: fixed;
-        }
+    /* boutons de base */
+    .btn {
+      display: block; width: 100%;
+      padding: 14px 20px;
+      border: none; border-radius: 12px;
+      font-family: inherit; font-size: 1rem; font-weight: bold;
+      cursor: pointer; text-align: center;
+      transition: transform .1s, opacity .1s;
+    }
+    .btn:active { transform: scale(.96); opacity: .85; }
+    .btn-primary   { background: linear-gradient(135deg,var(--purple),#4f1eab); color:#fff; box-shadow: var(--glow); }
+    .btn-gold      { background: linear-gradient(135deg,var(--gold),#b8860b); color:#000; }
+    .btn-secondary { background: rgba(255,255,255,.08); color: var(--text); border: 1px solid var(--border); }
+    .btn-danger    { background: linear-gradient(135deg,var(--red),#991b1b); color:#fff; }
+    .btn-success   { background: linear-gradient(135deg,var(--green),#065f46); color:#fff; }
+    .btn-sm { padding: 8px 16px; font-size: .85rem; width: auto; }
 
-        /* TIMER STYLE */
-        #timer-container {
-            margin-top: 8vh;
-            background: var(--cyan);
-            padding: 10px 40px;
-            border-radius: 50px;
-            border: 4px solid #008ba3;
-            box-shadow: 0 0 20px rgba(0, 229, 255, 0.6);
-            z-index: 20;
-        }
+    /* ── Fond étoilé animé ─────────────────────────────────────────────── */
+    .starfield {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(124,58,237,.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(212,168,67,.1)  0%, transparent 40%),
+        var(--bg-dark);
+    }
+    .starfield::before, .starfield::after {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.6) 0%, transparent 0%),
+        radial-gradient(1px 1px at 60% 10%, rgba(255,255,255,.4) 0%, transparent 0%),
+        radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,.5) 0%, transparent 0%),
+        radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,.3) 0%, transparent 0%),
+        radial-gradient(1px 1px at 10% 70%, rgba(255,255,255,.5) 0%, transparent 0%),
+        radial-gradient(1px 1px at 90% 40%, rgba(255,255,255,.4) 0%, transparent 0%),
+        radial-gradient(1px 1px at 50% 50%, rgba(255,255,255,.3) 0%, transparent 0%),
+        radial-gradient(1px 1px at 30% 15%, rgba(255,255,255,.6) 0%, transparent 0%),
+        radial-gradient(1px 1px at 70% 85%, rgba(255,255,255,.4) 0%, transparent 0%),
+        radial-gradient(1px 1px at 15% 90%, rgba(255,255,255,.3) 0%, transparent 0%);
+      animation: twinkle 4s ease-in-out infinite alternate;
+    }
+    .starfield::after { animation-delay: -2s; opacity: .7; }
+    @keyframes twinkle { from { opacity: .4; } to { opacity: 1; } }
 
-        #timer {
-            font-size: 3.5rem;
-            font-weight: 900;
-            color: #000;
-            font-family: 'Courier New', Courier, monospace;
-        }
+    /* ── Ornement décoratif ────────────────────────────────────────────── */
+    .ornament {
+      text-align: center; color: var(--gold); opacity: .5;
+      font-size: 1.2rem; letter-spacing: 6px;
+      margin: 8px 0;
+    }
 
-        /* DISQUE CENTRAL */
-        .main-wheel {
-            position: relative;
-            width: 320px;
-            height: 320px;
-            margin-top: 30px;
-            border-radius: 50%;
-            background: rgba(26, 26, 26, 0.85); /* Semi-transparent pour voir le fond */
-            border: 2px solid #444;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-        }
+    /* ── ÉCRAN SPLASH ──────────────────────────────────────────────────── */
+    #screen-splash {
+      justify-content: center; align-items: center; gap: 24px;
+      padding: 40px 24px;
+    }
+    .splash-candles {
+      font-size: 2.5rem;
+      display: flex; gap: 16px; justify-content: center;
+      animation: flicker 2s ease-in-out infinite alternate;
+    }
+    @keyframes flicker {
+      0%   { filter: drop-shadow(0 0 8px rgba(212,168,67,.9)); }
+      100% { filter: drop-shadow(0 0 20px rgba(212,168,67,.3)); }
+    }
+    .splash-title {
+      font-size: 3rem; font-weight: bold;
+      background: linear-gradient(135deg, var(--gold-lt), var(--gold), var(--purple-lt));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      text-align: center; letter-spacing: 4px;
+      text-shadow: none;
+    }
+    .splash-subtitle {
+      color: var(--text-dim); font-size: .95rem; text-align: center;
+      font-style: italic; letter-spacing: 2px;
+    }
+    .splash-desc {
+      color: var(--text-dim); font-size: .88rem; text-align: center;
+      line-height: 1.6; max-width: 320px;
+    }
+    .splash-sigil {
+      font-size: 5rem;
+      animation: rotate-slow 20s linear infinite;
+      filter: drop-shadow(0 0 20px rgba(124,58,237,.8));
+    }
+    @keyframes rotate-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* BOUTONS */
-        .btn-circle {
-            position: absolute;
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: #222;
-            border: 2px solid #555;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            z-index: 15;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
+    /* ── ÉCRAN SETUP ───────────────────────────────────────────────────── */
+    #screen-setup { padding: 0; }
+    .setup-header {
+      background: linear-gradient(180deg, rgba(124,58,237,.3), transparent);
+      padding: 20px 20px 12px;
+      text-align: center;
+    }
+    .setup-header h2 { font-size: 1.4rem; color: var(--gold); margin-bottom: 4px; }
+    .setup-header p  { color: var(--text-dim); font-size: .85rem; font-style: italic; }
+    .setup-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
 
-        .btn-circle:active { background: var(--cyan); transform: scale(0.9); }
-        .btn-circle svg { width: 30px; height: 30px; fill: white; pointer-events: none; }
+    #player-count-label {
+      text-align: center; font-size: .9rem;
+      color: var(--purple-lt); font-style: italic;
+    }
+    .input-row {
+      display: flex; gap: 8px;
+    }
+    .input-row input {
+      flex: 1; background: rgba(255,255,255,.07);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; color: var(--text);
+      font-family: inherit; font-size: 1rem; outline: none;
+      -webkit-appearance: none;
+    }
+    .input-row input::placeholder { color: var(--text-dim); }
+    .input-row input:focus { border-color: var(--purple-lt); }
 
-        /* CENTRE PÉNALITÉ */
-        .penalty-center {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90px;
-            height: 90px;
-            background: linear-gradient(145deg, #d32f2f, #8b0000);
-            border-radius: 50%;
-            border: 3px solid #fff;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 20;
-        }
-        .penalty-center svg { width: 35px; height: 35px; fill: white; }
-        .penalty-text { font-size: 0.6rem; font-weight: bold; margin-bottom: 2px; }
+    #player-list { display: flex; flex-direction: column; gap: 8px; }
+    .player-entry {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--bg-card); border-radius: 10px;
+      padding: 10px 12px;
+      border-left: 4px solid var(--purple);
+      animation: slideIn .2s ease;
+    }
+    @keyframes slideIn { from { opacity:0; transform: translateX(-10px); } to { opacity:1; transform:none; } }
+    .player-role-icon { font-size: 1.6rem; }
+    .player-entry-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .player-name-text  { font-weight: bold; font-size: .95rem; }
+    .player-role-name  { font-size: .78rem; font-style: italic; }
+    .btn-remove-player {
+      background: none; border: none; color: var(--text-dim);
+      font-size: 1rem; cursor: pointer; padding: 4px 8px;
+    }
 
-        /* POSITIONS */
-        #btn-start { top: -15px; left: 50%; transform: translateX(-50%); border-color: #4caf50; }
-        #btn-hint { top: 60px; left: 10px; }
-        #btn-code { top: 60px; right: 10px; }
-        #btn-object { bottom: 60px; left: 10px; }
-        #btn-machine { bottom: 60px; right: 10px; }
-        #btn-review { bottom: -15px; left: 50%; transform: translateX(-50%); }
+    #btn-start-game:disabled { opacity: .35; pointer-events: none; }
+    .setup-min-note {
+      text-align: center; color: var(--text-dim);
+      font-size: .8rem; font-style: italic; margin-top: -4px;
+    }
 
-        /* MODAL CODE */
-        #code-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.97);
-            z-index: 100;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
+    /* ── ÉCRAN HANDOFF ─────────────────────────────────────────────────── */
+    #screen-handoff {
+      justify-content: center; align-items: center; gap: 20px;
+      padding: 40px 28px; text-align: center;
+    }
+    .handoff-notice {
+      background: rgba(212,168,67,.12); border: 1px solid rgba(212,168,67,.3);
+      border-radius: 12px; padding: 12px 16px;
+      color: var(--gold-lt); font-size: .9rem; font-style: italic;
+      line-height: 1.5;
+    }
+    .handoff-card {
+      background: var(--bg-card); border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 24px 20px; width: 100%; max-width: 320px;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      box-shadow: var(--glow);
+    }
+    #handoff-icon { font-size: 3rem; }
+    #handoff-color { font-size: 1.6rem; font-weight: bold; }
+    .handoff-role-label { color: var(--text-dim); font-size: .88rem; font-style: italic; }
 
-        #code-input {
-            background: none;
-            color: var(--cyan);
-            border: none;
-            border-bottom: 4px solid var(--cyan);
-            font-size: 4rem;
-            width: 220px;
-            text-align: center;
-            outline: none;
-            margin-bottom: 40px;
-            touch-action: auto; /* Autorise l'écriture sur l'input */
-        }
+    /* ── ÉCRAN PLAYER VIEW ─────────────────────────────────────────────── */
+    #screen-player-view { padding: 16px; gap: 14px; }
+    .pv-header {
+      background: var(--bg-panel); border-radius: 12px;
+      padding: 14px; border: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    #pv-role-symbol { font-size: 2rem; }
+    .pv-header-info { flex: 1; }
+    .pv-header-info h3 { font-size: 1.1rem; color: var(--gold); }
+    .pv-header-info span { font-size: .82rem; color: var(--text-dim); font-style: italic; }
+    .ability-box {
+      background: rgba(124,58,237,.1); border: 1px solid rgba(124,58,237,.3);
+      border-radius: 10px; padding: 10px 14px;
+      font-size: .85rem; color: var(--purple-lt); line-height: 1.5;
+    }
+    .ability-box strong { color: var(--text); display: block; margin-bottom: 4px; }
 
-        .shake { animation: shakeAnim 0.3s ease-in-out; }
-        @keyframes shakeAnim {
-            0%, 100% { transform: translate(-50%, -50%); }
-            20%, 60% { transform: translate(-55%, -50%); }
-            40%, 80% { transform: translate(-45%, -50%); }
-        }
-    </style>
+    .clues-section h4 {
+      color: var(--text-dim); font-size: .85rem; margin-bottom: 8px;
+      text-transform: uppercase; letter-spacing: 2px;
+    }
+    #pv-clues { display: flex; flex-direction: column; gap: 8px; }
+    .clue-card {
+      background: var(--bg-card); border-radius: 10px;
+      border: 1px solid var(--border); padding: 12px;
+      display: flex; align-items: flex-start; gap: 10px;
+      transition: filter .3s;
+    }
+    .clue-card.blurred { filter: blur(8px); }
+    .clue-symbol { font-size: 1.5rem; flex-shrink: 0; }
+    .clue-element {
+      font-size: .7rem; color: var(--gold); text-transform: uppercase;
+      letter-spacing: 1px; display: block; margin-bottom: 4px;
+    }
+    .clue-text { font-size: .85rem; color: var(--text-dim); font-style: italic; line-height: 1.4; }
+
+    #btn-reveal-clues {
+      background: rgba(212,168,67,.12);
+      border: 1px solid rgba(212,168,67,.4);
+      border-radius: 12px; padding: 14px; color: var(--gold-lt);
+      font-family: inherit; font-size: .9rem; cursor: pointer;
+      text-align: center; touch-action: none;
+      transition: background .2s;
+    }
+    #btn-reveal-clues:active { background: rgba(212,168,67,.25); }
+
+    /* ── ÉCRAN PLATEAU ─────────────────────────────────────────────────── */
+    #screen-board { padding: 12px; gap: 12px; }
+    .board-header {
+      background: linear-gradient(135deg, var(--bg-panel), rgba(124,58,237,.2));
+      border-radius: 14px; padding: 14px 16px;
+      border: 1px solid var(--border);
+    }
+    .board-title {
+      font-size: .75rem; color: var(--text-dim); text-transform: uppercase;
+      letter-spacing: 3px; margin-bottom: 8px;
+    }
+    .turn-display {
+      display: flex; align-items: baseline; gap: 4px; margin-bottom: 10px;
+    }
+    .turn-number { font-size: 3rem; font-weight: bold; color: var(--gold); line-height: 1; }
+    .turn-sep    { color: var(--text-dim); font-size: 1.2rem; align-self: flex-end; margin-bottom: 4px; }
+    .turn-max    { font-size: 1.5rem; color: var(--text-dim); align-self: flex-end; margin-bottom: 6px; }
+
+    .progress-track {
+      background: rgba(255,255,255,.08); border-radius: 6px; height: 6px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--purple), var(--gold));
+      border-radius: 6px;
+      transition: width .5s ease;
+    }
+
+    .section-label {
+      font-size: .75rem; color: var(--text-dim); text-transform: uppercase;
+      letter-spacing: 2px; margin-bottom: 6px;
+    }
+    #ritual-list { display: flex; flex-direction: column; gap: 8px; }
+    .ritual-card {
+      background: var(--bg-card); border-radius: 12px;
+      border: 1px solid var(--border); padding: 12px 14px;
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer; transition: transform .1s, border-color .2s;
+      touch-action: manipulation;
+    }
+    .ritual-card:active { transform: scale(.97); border-color: var(--purple-lt); }
+    .ritual-card.ritual-done { opacity: .6; border-color: rgba(5,150,105,.4); }
+    .ritual-symbol { font-size: 1.8rem; flex-shrink: 0; }
+    .ritual-info { flex: 1; }
+    .ritual-name { display: block; font-size: .95rem; font-weight: bold; color: var(--text); }
+    .ritual-diff { font-size: .75rem; color: var(--gold); letter-spacing: 2px; }
+    .ritual-status { font-size: 1.2rem; }
+
+    .events-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .event-badge {
+      background: rgba(220,38,38,.15); border: 1px solid rgba(220,38,38,.3);
+      border-radius: 8px; padding: 4px 10px;
+      font-size: .8rem; color: #fca5a5;
+    }
+    .no-events { color: var(--text-dim); font-size: .85rem; font-style: italic; }
+
+    .current-player-bar {
+      background: rgba(124,58,237,.12); border: 1px solid rgba(124,58,237,.3);
+      border-radius: 12px; padding: 10px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .current-player-bar span { font-size: .85rem; color: var(--text-dim); font-style: italic; }
+    .current-player-bar strong { color: var(--purple-lt); }
+
+    .board-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .board-actions .btn-primary { grid-column: 1/-1; }
+
+    /* ── ÉCRAN RITUEL ──────────────────────────────────────────────────── */
+    #screen-ritual { padding: 20px; gap: 16px; }
+    .ritual-header { text-align: center; }
+    #ritual-symbol { font-size: 4rem; display: block; margin-bottom: 8px;
+      filter: drop-shadow(0 0 20px rgba(212,168,67,.6));
+      animation: pulse-gold 2s ease-in-out infinite alternate; }
+    @keyframes pulse-gold {
+      from { filter: drop-shadow(0 0 10px rgba(212,168,67,.4)); }
+      to   { filter: drop-shadow(0 0 30px rgba(212,168,67,.9)); }
+    }
+    #ritual-title { font-size: 1.6rem; color: var(--gold); text-align: center; }
+
+    .ritual-body {
+      background: var(--bg-card); border-radius: 14px;
+      border: 1px solid var(--border); padding: 16px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    #ritual-description { font-size: .95rem; line-height: 1.6; color: var(--text); font-style: italic; }
+
+    .elements-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .element-tag {
+      background: rgba(124,58,237,.2); border: 1px solid rgba(124,58,237,.4);
+      border-radius: 6px; padding: 3px 10px;
+      font-size: .78rem; color: var(--purple-lt); text-transform: uppercase; letter-spacing: 1px;
+    }
+
+    .clue-box {
+      background: rgba(212,168,67,.07); border: 1px solid rgba(212,168,67,.2);
+      border-radius: 10px; padding: 12px;
+      font-size: .88rem; color: var(--gold-lt); font-style: italic; line-height: 1.5;
+    }
+    .clue-box::before { content: '✦ '; opacity: .7; }
+
+    #btn-complete-ritual:disabled { opacity:.35; pointer-events:none; }
+
+    /* ── ÉCRAN ÉVÉNEMENT ───────────────────────────────────────────────── */
+    #screen-event {
+      justify-content: center; align-items: center;
+      padding: 24px; gap: 20px;
+    }
+    .event-card {
+      background: var(--bg-card); border-radius: 16px;
+      border: 1px solid var(--border); padding: 24px 20px;
+      width: 100%; max-width: 340px;
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      text-align: center; box-shadow: 0 0 30px rgba(0,0,0,.5);
+    }
+    #event-symbol { font-size: 3.5rem; }
+    #event-name { font-size: 1.4rem; color: var(--gold); }
+    .event-type-badge {
+      border-radius: 20px; padding: 4px 14px;
+      font-size: .75rem; font-weight: bold; letter-spacing: 2px;
+    }
+    .event-obstacle  { background: rgba(220,38,38,.2); color:#fca5a5; border: 1px solid rgba(220,38,38,.4); }
+    .event-aide      { background: rgba(5,150,105,.2);  color:#6ee7b7; border: 1px solid rgba(5,150,105,.4); }
+    .event-révélation{ background: rgba(124,58,237,.2); color:#c4b5fd; border: 1px solid rgba(124,58,237,.4); }
+
+    #event-description { font-size: .9rem; line-height: 1.6; color: var(--text-dim); font-style: italic; }
+
+    /* overlay succès rituel */
+    #ritual-success-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(5,150,105,.15);
+      backdrop-filter: blur(6px);
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center; gap: 16px;
+      text-align: center; padding: 32px;
+    }
+    .success-icon { font-size: 4rem; animation: bounce .6s ease infinite alternate; }
+    @keyframes bounce { from { transform:translateY(0); } to { transform:translateY(-8px); } }
+    .success-title { font-size: 1.6rem; color: var(--gold); }
+    .success-text  { font-size: .9rem; color: var(--text-dim); font-style: italic; max-width: 280px; line-height: 1.5; }
+
+    /* ── ÉCRAN FIN ─────────────────────────────────────────────────────── */
+    #screen-end {
+      justify-content: center; align-items: center;
+      padding: 32px 24px; gap: 20px; text-align: center;
+    }
+    #end-screen-bg { position: absolute; inset: 0; pointer-events: none; z-index: -1; }
+    .end-victory { background: radial-gradient(circle at 50% 40%, rgba(212,168,67,.2) 0%, transparent 65%); }
+    .end-defeat  { background: radial-gradient(circle at 50% 40%, rgba(220,38,38,.2)  0%, transparent 65%); }
+
+    #end-title    { font-size: 1.8rem; color: var(--gold); line-height: 1.2; }
+    #end-subtitle { font-size: .9rem; color: var(--text-dim); font-style: italic; line-height: 1.5; max-width: 300px; }
+
+    .end-stats {
+      background: var(--bg-card); border-radius: 14px;
+      border: 1px solid var(--border); padding: 16px 20px;
+      width: 100%; max-width: 280px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .stat-row { display: flex; justify-content: space-between; align-items: center; }
+    .stat-label { color: var(--text-dim); font-size: .88rem; }
+    .stat-value { color: var(--gold); font-weight: bold; font-size: 1.1rem; }
+  </style>
 </head>
-<body onclick="unlockAudio()">
+<body>
 
-    <div id="timer-container">
-        <div id="timer">60:00</div>
+  <!-- fond étoilé -->
+  <div class="starfield"></div>
+
+  <!-- ── SPLASH ──────────────────────────────────────────── -->
+  <div id="screen-splash" class="screen">
+    <div class="splash-candles">🕯️ 🕯️ 🕯️</div>
+    <h1 class="splash-title">HANTISE</h1>
+    <p class="splash-subtitle">Le Cercle des Médiums</p>
+    <div class="ornament">— ✦ —</div>
+    <div class="splash-sigil">🔮</div>
+    <p class="splash-desc">
+      3 à 8 médiums. 7 tours. Des rituels à accomplir avant que les ténèbres ne vous engloutissent.
+    </p>
+    <button id="btn-splash-start" class="btn btn-primary" style="max-width:280px">
+      ✦ Ouvrir le Cercle ✦
+    </button>
+    <p class="splash-subtitle" style="font-size:.75rem; margin-top:4px">Pass &amp; Play · GitHub Pages</p>
+  </div>
+
+  <!-- ── SETUP ───────────────────────────────────────────── -->
+  <div id="screen-setup" class="screen hidden">
+    <div class="setup-header">
+      <h2>🕯️ Réunion des Médiums</h2>
+      <p>Entrez les noms des joueurs (3 minimum, 8 maximum)</p>
+    </div>
+    <div class="setup-body">
+      <p id="player-count-label">0 / 8 joueurs</p>
+      <div class="input-row">
+        <input id="player-name-input" type="text" placeholder="Nom du médium…" maxlength="20" autocomplete="off">
+        <button id="btn-add-player" class="btn btn-gold btn-sm">+ Ajouter</button>
+      </div>
+      <div id="player-list"></div>
+      <p class="setup-min-note">⚠ Minimum 3 médiums pour invoquer les esprits</p>
+      <div style="margin-top:auto; padding-top:12px;">
+        <button id="btn-start-game" class="btn btn-primary" disabled>
+          🔮 Débuter la Séance
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HANDOFF ─────────────────────────────────────────── -->
+  <div id="screen-handoff" class="screen hidden">
+    <div class="handoff-notice">
+      📵 Passez le téléphone à la personne suivante.<br>
+      Les autres : <strong>fermez les yeux</strong> ou regardez ailleurs.
+    </div>
+    <div class="handoff-card">
+      <div id="handoff-icon">🔮</div>
+      <div id="handoff-color">
+        <strong id="handoff-name">Joueur</strong>
+      </div>
+      <span class="handoff-role-label">Vous êtes :</span>
+      <span id="handoff-role" style="color:var(--purple-lt); font-style:italic; font-size:1.1rem">Rôle</span>
+    </div>
+    <button id="btn-handoff-ready" class="btn btn-primary" style="max-width:280px">
+      👁 Je suis prêt — Voir mes cartes
+    </button>
+  </div>
+
+  <!-- ── PLAYER VIEW ─────────────────────────────────────── -->
+  <div id="screen-player-view" class="screen hidden">
+    <div class="pv-header">
+      <span id="pv-role-symbol">🔮</span>
+      <div class="pv-header-info">
+        <h3 id="pv-name">Joueur</h3>
+        <span id="pv-role">Rôle</span>
+      </div>
+    </div>
+    <div class="ability-box">
+      <strong>⚡ Pouvoir Spécial</strong>
+      <span id="pv-ability">…</span>
+    </div>
+    <div class="clues-section">
+      <h4>Vos Indices</h4>
+      <div id="pv-clues"></div>
+    </div>
+    <button id="btn-reveal-clues">👁 Maintenir pour voir mes indices</button>
+    <button id="btn-done-viewing" class="btn btn-secondary">
+      ✓ J'ai mémorisé — Aller au plateau
+    </button>
+  </div>
+
+  <!-- ── PLATEAU ─────────────────────────────────────────── -->
+  <div id="screen-board" class="screen hidden">
+    <div class="board-header">
+      <p class="board-title">🕯️ Table des Rituels</p>
+      <div class="turn-display">
+        <span class="turn-number" id="board-turn">1</span>
+        <span class="turn-sep">/</span>
+        <span class="turn-max" id="board-turn-max">7</span>
+        <span style="color:var(--text-dim); font-size:.85rem; margin-left:6px; align-self:flex-end; margin-bottom:6px"> Tours</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="turn-progress" style="width:0%"></div>
+      </div>
     </div>
 
-    <div class="main-wheel">
-        <div class="penalty-center" id="penalty-hit" onclick="triggerPenalty()">
-            <span class="penalty-text">PÉNALITÉ</span>
-            <svg viewBox="0 0 24 24"><path d="M12,2L1,21H23L12,2M12,6L19.53,19H4.47L12,6M11,10V14H13V10H11M11,16V18H13V16H11Z"/></svg>
-        </div>
-
-        <div class="btn-circle" id="btn-start" onclick="toggleGame()">
-            <svg id="start-icon" viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg>
-        </div>
-
-        <div class="btn-circle" id="btn-hint" onclick="playClick()"><svg viewBox="0 0 24 24"><path d="M12,2A7,7 0 0,0 5,9C5,11.38 6.19,13.47 8,14.74V17A1,1 0 0,0 9,18H15A1,1 0 0,0 16,17V14.74C17.81,13.47 19,11.38 19,9A7,7 0 0,0 12,2M9,21A1,1 0 0,0 10,22H14A1,1 0 0,0 15,21V20H9V21Z"/></svg></div>
-        <div class="btn-circle" id="btn-code" onclick="showCode()"><svg viewBox="0 0 24 24"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.11,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8H17V6A5,5 0 0,0 12,1A5,5 0 0,0 7,6V8H6A2,2 0 0,0 4,10V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V10A2,2 0 0,0 18,8M8.9,6C8.9,4.29 10.29,2.9 12,2.9C13.71,2.9 15.1,4.29 15.1,6V8H8.9V6Z"/></svg></div>
-        <div class="btn-circle" id="btn-object" onclick="playClick()"><svg viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/></svg></div>
-        <div class="btn-circle" id="btn-machine" onclick="playClick()"><svg viewBox="0 0 24 24"><path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.35 19.43,11.03L21.54,9.37C21.73,9.22 21.78,8.97 21.68,8.76L19.68,5.3C19.58,5.09 19.33,5.03 19.12,5.11L16.64,6.11C16.12,5.71 15.56,5.38 14.94,5.13L14.57,2.47C14.53,2.25 14.34,2.1 14.11,2.1H10.11C9.88,2.1 9.69,2.25 9.65,2.47L9.28,5.13C8.66,5.38 8.1,5.71 7.58,6.11L5.1,5.11C4.89,5.03 4.64,5.09 4.54,5.3L2.54,8.76C2.44,8.97 2.49,9.22 2.68,9.37L4.79,11.03C4.75,11.35 4.72,11.67 4.72,12C4.72,12.33 4.75,12.65 4.79,12.97L2.68,14.63C2.49,14.78 2.44,15.03 2.54,15.24L4.54,18.7C4.64,18.91 4.89,18.97 5.1,18.89L7.58,17.89C8.1,18.29 8.66,18.62 9.28,18.87L9.65,21.53C9.69,21.75 9.88,21.9 10.11,21.9H14.11C14.34,21.9 14.53,21.75 14.57,21.53L14.94,18.87C15.56,18.62 16.12,18.29 16.64,17.89L19.12,18.89C19.33,18.97 19.58,18.91 19.68,18.7L21.68,15.24C21.78,15.03 21.73,14.78 21.54,14.63L19.43,12.97Z"/></svg></div>
-        <div class="btn-circle" id="btn-review" onclick="playClick()"><svg viewBox="0 0 24 24"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg></div>
+    <div>
+      <p class="section-label">Rituels à Accomplir</p>
+      <div id="ritual-list"></div>
     </div>
 
-    <div id="code-overlay">
-        <input type="number" id="code-input" pattern="\d*" placeholder="0000">
-        <div style="display: flex; gap: 20px;">
-            <button onclick="checkCode()" style="background:var(--cyan); color:black; padding:15px 30px; font-weight:bold; border-radius:10px; border:none; touch-action:auto;">VALIDER</button>
-            <button onclick="hideCode()" style="background:#444; color:white; padding:15px 30px; border-radius:10px; border:none; touch-action:auto;">RETOUR</button>
-        </div>
+    <div>
+      <p class="section-label">Événements Actifs</p>
+      <div class="events-row" id="active-events">
+        <span class="no-events">Aucun événement actif</span>
+      </div>
     </div>
 
-    <script>
-        // AUDIO PRE-LOADING
-        const audioCtx = {
-            ambiance: new Audio('ambiance.mp3'),
-            bip: new Audio('bip.mp3'),
-            bravo: new Audio('bravo.mp3'),
-            click: new Audio('click.mp3'),
-            unlocked: false
-        };
-        audioCtx.ambiance.loop = true;
+    <div class="current-player-bar">
+      <span>Médium actuel :</span>
+      <strong id="current-player-name">—</strong>
+      <span id="current-player-role" style="color:var(--purple-lt); font-style:italic;"></span>
+    </div>
 
-        // Fonction pour déverrouiller l'audio sur mobile
-        function unlockAudio() {
-            if (audioCtx.unlocked) return;
-            audioCtx.click.play().then(() => {
-                audioCtx.click.pause();
-                audioCtx.unlocked = true;
-                console.log("Audio Unlocked");
-            });
-        }
+    <div class="board-actions">
+      <button id="btn-view-my-cards" class="btn btn-secondary">🃏 Mes Cartes</button>
+      <button id="btn-draw-event"    class="btn btn-secondary">🎴 Tirer Événement</button>
+      <button id="btn-next-turn"     class="btn btn-primary">→ Tour Suivant</button>
+    </div>
+  </div>
 
-        function playSound(sound) {
-            const s = audioCtx[sound].cloneNode();
-            s.play();
-        }
+  <!-- ── RITUEL ──────────────────────────────────────────── -->
+  <div id="screen-ritual" class="screen hidden">
+    <div class="ritual-header">
+      <span id="ritual-symbol">🕯️</span>
+      <h2 id="ritual-title">Rituel</h2>
+    </div>
+    <div class="ornament">— ✦ —</div>
+    <div class="ritual-body">
+      <p id="ritual-description">Description…</p>
+      <div>
+        <p class="section-label">Éléments requis</p>
+        <div class="elements-row" id="ritual-elements"></div>
+      </div>
+      <div class="clue-box" id="ritual-clue-text">Indice…</div>
+    </div>
+    <button id="btn-complete-ritual" class="btn btn-success">✅ Accomplir ce rituel</button>
+    <button id="btn-ritual-back"     class="btn btn-secondary">← Retour au plateau</button>
+  </div>
 
-        let timeLeft = 60 * 60;
-        let isRunning = false;
-        let timerInterval;
+  <!-- overlay succès -->
+  <div id="ritual-success-overlay" class="hidden">
+    <div class="success-icon">✅</div>
+    <p class="success-title">Rituel Accompli !</p>
+    <p class="success-text">…</p>
+  </div>
 
-        function updateDisplay() {
-            const m = Math.floor(timeLeft / 60);
-            const s = timeLeft % 60;
-            document.getElementById('timer').innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-        }
+  <!-- ── ÉVÉNEMENT ───────────────────────────────────────── -->
+  <div id="screen-event" class="screen hidden">
+    <p style="color:var(--text-dim); text-transform:uppercase; letter-spacing:3px; font-size:.8rem">Événement</p>
+    <div class="event-card">
+      <span id="event-symbol">👻</span>
+      <h2 id="event-name">Événement</h2>
+      <span id="event-type" class="event-type-badge">TYPE</span>
+      <p id="event-description">Description…</p>
+    </div>
+    <button id="btn-event-ok" class="btn btn-primary" style="max-width:280px">Compris — Continuer</button>
+  </div>
 
-        function toggleGame() {
-            playSound('click');
-            if (!isRunning) {
-                isRunning = true;
-                audioCtx.ambiance.play();
-                document.getElementById('start-icon').innerHTML = '<path d="M14,19H18V5H14M6,19H10V5H6V19Z"/>';
-                timerInterval = setInterval(() => {
-                    if (timeLeft > 0) { timeLeft--; updateDisplay(); }
-                }, 1000);
-            } else {
-                isRunning = false;
-                audioCtx.ambiance.pause();
-                document.getElementById('start-icon').innerHTML = '<path d="M8,5.14V19.14L19,12.14L8,5.14Z"/>';
-                clearInterval(timerInterval);
-            }
-        }
+  <!-- ── FIN ────────────────────────────────────────────── -->
+  <div id="screen-end" class="screen hidden">
+    <div id="end-screen-bg" class="end-defeat"></div>
+    <div style="font-size:4rem">🔮</div>
+    <h2 id="end-title">Fin de Partie</h2>
+    <p id="end-subtitle">…</p>
+    <div class="end-stats">
+      <div class="stat-row">
+        <span class="stat-label">Rituels accomplis</span>
+        <span class="stat-value"><span id="end-rituals-done">0</span> / <span id="end-rituals-total">0</span></span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Tours atteints</span>
+        <span class="stat-value"><span id="end-turn-reached">0</span> / 7</span>
+      </div>
+    </div>
+    <button id="btn-replay" class="btn btn-primary" style="max-width:280px">🔄 Nouvelle Séance</button>
+  </div>
 
-        function triggerPenalty() {
-            playSound('bip');
-            timeLeft = Math.max(0, timeLeft - 180);
-            updateDisplay();
-            const btn = document.getElementById('penalty-hit');
-            btn.classList.add('shake');
-            setTimeout(() => btn.classList.remove('shake'), 300);
-        }
-
-        function showCode() { playSound('click'); document.getElementById('code-overlay').style.display = 'flex'; }
-        function hideCode() { document.getElementById('code-overlay').style.display = 'none'; }
-        function playClick() { playSound('click'); }
-
-        function checkCode() {
-            const val = document.getElementById('code-input').value;
-            if (val === "1234") { // TON CODE ICI
-                playSound('bravo');
-                alert("SUCCÈS !");
-                hideCode();
-            } else {
-                triggerPenalty();
-                hideCode();
-            }
-            document.getElementById('code-input').value = "";
-        }
-
-        updateDisplay();
-    </script>
+  <script type="module">
+    import { init } from './app.js';
+    init();
+  </script>
 </body>
 </html>
